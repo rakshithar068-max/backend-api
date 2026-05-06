@@ -1,0 +1,13 @@
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Rider
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+appsettings.Development.json
