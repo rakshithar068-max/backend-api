@@ -72,7 +72,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-        name: app
+         name: app
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
