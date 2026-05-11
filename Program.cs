@@ -4,7 +4,8 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls("http://localhost:5000", "https://localhost:5001","https://react-rakshitha-czhwfef3hce2fjaf.southindia-01.azurewebsites.net");
+// When running in Docker, ASPNETCORE_URLS is used to bind to the container port.
+// In local development the default URLs will still be used.
 
 builder.Services.AddSingleton<EmployeeService>();
 builder.Services.AddEndpointsApiExplorer();
