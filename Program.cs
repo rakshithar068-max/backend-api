@@ -14,7 +14,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("LocalDevCors", policy =>
     {
-        policy.WithOrigins("https://react-rakshitha-czhwfef3hce2fjaf.southindia-01.azurewebsites.net","http://localhost:3000/")
+        policy.WithOrigins("https://react-rakshitha-czhwfef3hce2fjaf.southindia-01.azurewebsites.net","http://localhost:3000")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
