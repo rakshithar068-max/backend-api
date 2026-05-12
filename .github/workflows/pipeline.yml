@@ -1,82 +1,57 @@
-name: CI-CD Pipeline
+name: Docker ACR ACI Pipeline
 
 on:
-  pull_request:
-    branches: [ dev, staging, main ]
   push:
-    branches: [ dev, staging, main ]
+    branches:
+      - dev
+      - staging
+      - main
 
 jobs:
-  build:
+  build-and-deploy-backend:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+    - name: Azure Login
+      uses: azure/login@v2
       with:
-        dotnet-version: '8.0.x'
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Restore
-      run: dotnet restore
+    - name: Login to ACR
+      run: |
+        docker login myreactdotnetacr.azurecr.io \
+        -u ${{ secrets.ACR_USERNAME }} \
+        -p ${{ secrets.ACR_PASSWORD }}
 
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
+    - name: Build Docker Image
+      run: |
+        docker build -t myreactdotnetacr.azurecr.io/dotnet_api:${{ github.sha }} ./EmployeeApi
 
-    - name: Test
-      run: dotnet test --no-build
+    - name: Push Docker Image
+      run: |
+        docker push myreactdotnetacr.azurecr.io/dotnet_api:${{ github.sha }}
 
-    - name: Publish
-      run: dotnet publish -c Release -o publish
+    - name: Delete Existing ACI
+      run: |
+        az container delete \
+          --resource-group virtualmachine1 \
+          --name dotnet-api-container \
+          --yes || true
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: app
-        path: publish
-
-  deploy-dev:
-    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Deploy to Dev
-      run: echo "Deploying to DEV environment"
-
-  deploy-staging:
-    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Deploy to Staging
-      run: echo "Deploying to STAGING environment"
-
-  deploy-prod:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Deploy to Production
-      run: echo "Deploying to PRODUCTION"
-
-  deploy-azure:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-         name: app
-
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-         app-name: 'rakshitha-api'
-         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-         package: .
+    - name: Deploy to ACI
+      run: |
+        az container create \
+          --resource-group virtualmachine1 \
+          --name dotnet-api-container \
+          --image myreactdotnetacr.azurecr.io/dotnet_api:${{ github.sha }} \
+          --registry-login-server myreactdotnetacr.azurecr.io \
+          --registry-username ${{ secrets.ACR_USERNAME }} \
+          --registry-password ${{ secrets.ACR_PASSWORD }} \
+          --dns-name-label rakshitha-dotnet-api-123 \
+          --ports 5000 \
+          --os-type Linux \
+          --cpu 1 \
+          --memory 1.5
