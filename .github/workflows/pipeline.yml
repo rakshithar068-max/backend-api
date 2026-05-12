@@ -28,7 +28,7 @@ jobs:
 
     - name: Build Docker Image
       run: |
-        docker build -t myreactdotnetacr.azurecr.io/dotnet_api:${{ github.sha }} ./EmployeeApi
+        docker build -t myreactdotnetacr.azurecr.io/dotnet_api:${{ github.sha }} .
 
     - name: Push Docker Image
       run: |
