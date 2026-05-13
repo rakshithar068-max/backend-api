@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "https://react-rakshitha-czhwfef3hce2fjaf.southindia-01.azurewebsites.net",
-                "http://135.13.13.184/",
+                "http://135.13.12.231",
                 "http://rakshitha-react-app-123.southindia.azurecontainer.io"
               )
               .AllowAnyHeader()
